@@ -32,7 +32,6 @@
 *******************************************************************************/
 
 #include <ros/ros.h>
-
 #include "std_msgs/String.h"
 #include "dynamixel_sdk_examples/BulkGetItem.h"
 #include "dynamixel_sdk_examples/BulkSetItem.h"

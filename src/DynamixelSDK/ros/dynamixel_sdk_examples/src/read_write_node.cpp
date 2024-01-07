@@ -56,7 +56,7 @@ using namespace dynamixel;
 #define DXL1_ID               6               // DXL1 ID
 #define DXL2_ID               2               // DXL2 ID
 #define BAUDRATE              1000000           // Default Baudrate of DYNAMIXEL X series
-#define DEVICE_NAME           "/dev/ttyUSB0"  // [Linux] To find assigned port, use "$ ls /dev/ttyUSB*" command
+#define DEVICE_NAME           "/dev/ttyUSB1"  // [Linux] To find assigned port, use "$ ls /dev/ttyUSB*" command
 
 PortHandler * portHandler;
 PacketHandler * packetHandler;
@@ -69,12 +69,12 @@ bool getPresentPositionCallback(
   int dxl_comm_result = COMM_TX_FAIL;
 
   // Position Value of X series is 4 byte data. For AX & MX(1.0) use 2 byte data(int16_t) for the Position Value.
-  int32_t position = 0;
+  int16_t position = 0;
 
   // Read Present Position (length : 4 bytes) and Convert uint32 -> int32
   // When reading 2 byte data from AX / MX(1.0), use read2ByteTxRx() instead.
-  dxl_comm_result = packetHandler->read4ByteTxRx(
-    portHandler, (uint8_t)req.id, ADDR_PRESENT_POSITION, (uint32_t *)&position, &dxl_error);
+  dxl_comm_result = packetHandler->read2ByteTxRx(
+    portHandler, (uint8_t)req.id, ADDR_PRESENT_POSITION, (uint16_t *)&position, &dxl_error);
   if (dxl_comm_result == COMM_SUCCESS) {
     ROS_INFO("getPosition : [ID:%d] -> [POSITION:%d]", req.id, position);
     res.position = position;
@@ -91,20 +91,22 @@ void setPositionCallback(const dynamixel_sdk_examples::SetPosition::ConstPtr & m
   int dxl_comm_result = COMM_TX_FAIL;
 
   // Position Value of X series is 4 byte data. For AX & MX(1.0) use 2 byte data(uint16_t) for the Position Value.
-  uint32_t position = (unsigned int)msg->position; // Convert int32 -> uint32
+  uint16_t position = (unsigned int)msg->position; // Convert int32 -> uint32
 
-    //SET MOVING SPEED
-  dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, (uint8_t)msg->id, ADDR_MOVEING_SPEED, (uint16_t)100, &dxl_error);
-    ROS_INFO("set position 1");
-  if (dxl_comm_result != COMM_SUCCESS) {
-    ROS_ERROR("Failed to set MOVING SPEED for Dynamixel ID %d", DXL1_ID);
-    return;
-  }
+  //SET MOVING SPEED
+  // dxl_comm_result = packetHandler->write4ByteTxRx(
+  //   portHandler, (uint8_t)msg->id, ADDR_MOVEING_SPEED, (uint32_t)100, &dxl_error);
+  //   ROS_INFO("set position 1");
+  // if (dxl_comm_result != COMM_SUCCESS) {
+  //   ROS_ERROR("Failed to set MOVING SPEED for Dynamixel ID %d", DXL1_ID);
+  //   return;
+  // }else{
+  //   ROS_INFO("success for setting moving speed");
+  // }
 
   // Write Goal Position (length : 4 bytes)
   // When writing 2 byte data to AX / MX(1.0), use write2ByteTxRx() instead.
-  dxl_comm_result = packetHandler->write4ByteTxRx(
+  dxl_comm_result = packetHandler->write2ByteTxRx(
     portHandler, (uint8_t)msg->id, ADDR_GOAL_POSITION, position, &dxl_error);
   if (dxl_comm_result == COMM_SUCCESS) {
     ROS_INFO("setPosition : [ID:%d] [POSITION:%d]", msg->id, msg->position);
@@ -147,20 +149,26 @@ int main(int argc, char ** argv)
 
     //SET MOVING SPEED
   dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL1_ID, ADDR_MOVEING_SPEED, (uint16_t)100, &dxl_error);
+    portHandler, (uint8_t)DXL1_ID, ADDR_MOVEING_SPEED, (uint16_t)100, &dxl_error);
     ROS_INFO("set position 1");
   if (dxl_comm_result != COMM_SUCCESS) {
     ROS_ERROR("Failed to set MOVING SPEED for Dynamixel ID %d", DXL1_ID);
-    return -1;
+    return 0;
+  }else{
+    ROS_INFO("success for setting moving speed for %d",DXL1_ID);
   }
 
+
   dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL2_ID, ADDR_MOVEING_SPEED, (uint16_t)100, &dxl_error);
+    portHandler, (uint8_t)DXL2_ID, ADDR_MOVEING_SPEED, (uint16_t)100, &dxl_error);
     ROS_INFO("set position 1");
   if (dxl_comm_result != COMM_SUCCESS) {
-    ROS_ERROR("Failed to set MOVING SPEED for Dynamixel ID %d", DXL2_ID);
-    return -1;
+    ROS_ERROR("Failed to set MOVING SPEED for Dynamixel ID %d", DXL1_ID);
+    return 0;
+  }else{
+    ROS_INFO("success for setting moving speed for %d",DXL2_ID);
   }
+
 
   ros::init(argc, argv, "read_write_node");
   ros::NodeHandle nh;

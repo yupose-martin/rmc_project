@@ -58,13 +58,13 @@ using namespace dynamixel;
 #define DXL3_ID               12              // AX-12A ID
 #define DXL4_ID               1
 #define BAUDRATE              1000000           // Default Baudrate of DYNAMIXEL AX-12A series
-#define DEVICE_NAME           "/dev/ttyUSB1"  // [Linux] To find assigned port, use "$ ls /dev/ttyUSB*" command
+#define DEVICE_NAME           "/dev/ttyUSB0"  // [Linux] To find assigned port, use "$ ls /dev/ttyUSB*" command
 
 PortHandler * portHandler = PortHandler::getPortHandler(DEVICE_NAME);
 PacketHandler * packetHandler = PacketHandler::getPacketHandler(PROTOCOL_VERSION);
 
-GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR_PRESENT_POSITION, 2);
-GroupSyncWrite groupSyncWrite(portHandler, packetHandler, ADDR_GOAL_POSITION, 2);
+GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR_PRESENT_POSITION, 4);
+GroupSyncWrite groupSyncWrite(portHandler, packetHandler, ADDR_GOAL_POSITION, 4);
 
 
 bool getMoreMotorsPositionCallback(
@@ -76,10 +76,10 @@ bool getMoreMotorsPositionCallback(
   int dxl_addparam_result = false;
 
   // Position Value of X series is 4 byte data. For AX & MX(1.0) use 2 byte data(int16_t) for the Position Value.
-  int16_t position1 = 0;
-  int16_t position2 = 0;
-  int16_t position3 = 0;
-  int16_t position4 = 0;
+  int32_t position1 = 0;
+  int32_t position2 = 0;
+  int32_t position3 = 0;
+  int32_t position4 = 0;
 
   // Read Present Position (length : 4 bytes) and Convert uint32 -> int32
   // When reading 2 byte data from AX / MX(1.0), use read2ByteTxRx() instead.
@@ -109,10 +109,10 @@ bool getMoreMotorsPositionCallback(
 
   dxl_comm_result = groupSyncRead.txRxPacket();
   if (dxl_comm_result == COMM_SUCCESS) {
-    position1 = groupSyncRead.getData((uint8_t)req.id1, ADDR_PRESENT_POSITION, 2);
-    position2 = groupSyncRead.getData((uint8_t)req.id2, ADDR_PRESENT_POSITION, 2);
-    position3 = groupSyncRead.getData((uint8_t)req.id3, ADDR_PRESENT_POSITION, 2);
-    position4 = groupSyncRead.getData((uint8_t)req.id3, ADDR_PRESENT_POSITION, 2);
+    position1 = groupSyncRead.getData((uint8_t)req.id1, ADDR_PRESENT_POSITION, 4);
+    position2 = groupSyncRead.getData((uint8_t)req.id2, ADDR_PRESENT_POSITION, 4);
+    position3 = groupSyncRead.getData((uint8_t)req.id3, ADDR_PRESENT_POSITION, 4);
+    position4 = groupSyncRead.getData((uint8_t)req.id3, ADDR_PRESENT_POSITION, 4);
     ROS_INFO("getPosition : [POSITION:%d]", position1);
     ROS_INFO("getPosition : [POSITION:%d]", position2);
     ROS_INFO("getPosition : [POSITION:%d]", position3);
@@ -135,24 +135,32 @@ void setMoreMotorsPositionCallback(const dynamixel_sdk_examples::SetMoreMotors::
   uint8_t dxl_error = 0;
   int dxl_comm_result = COMM_TX_FAIL;
   int dxl_addparam_result = false;
-  uint8_t param_goal_position1[2];
-  uint8_t param_goal_position2[2];
-  uint8_t param_goal_position3[2];
-  uint8_t param_goal_position4[2];
+  uint8_t param_goal_position1[4];
+  uint8_t param_goal_position2[4];
+  uint8_t param_goal_position3[4];
+  uint8_t param_goal_position4[4];
 
   // Position Value of X series is 4 byte data. For AX & MX(1.0) use 2 byte data(uint16_t) for the Position Value.
-  uint16_t position1 = (uint16_t)msg->position1; // Convert int32 -> uint32
+  uint32_t position1 = (unsigned int)msg->position1; // Convert int32 -> uint32
   param_goal_position1[0] = DXL_LOBYTE(DXL_LOWORD(position1));
   param_goal_position1[1] = DXL_HIBYTE(DXL_LOWORD(position1));
-  uint16_t position2 = (uint16_t)msg->position2; // Convert int32 -> uint32
+  param_goal_position1[2] = DXL_LOBYTE(DXL_HIWORD(position1));
+  param_goal_position1[3] = DXL_HIBYTE(DXL_HIWORD(position1));
+  uint32_t position2 = (unsigned int)msg->position2; // Convert int32 -> uint32
   param_goal_position2[0] = DXL_LOBYTE(DXL_LOWORD(position2));
   param_goal_position2[1] = DXL_HIBYTE(DXL_LOWORD(position2));
-  uint16_t position3 = (uint16_t)msg->position3; // Convert int32 -> uint32
+  param_goal_position2[2] = DXL_LOBYTE(DXL_HIWORD(position2));
+  param_goal_position2[3] = DXL_HIBYTE(DXL_HIWORD(position2));
+  uint32_t position3 = (unsigned int)msg->position3; // Convert int32 -> uint32
   param_goal_position3[0] = DXL_LOBYTE(DXL_LOWORD(position3));
   param_goal_position3[1] = DXL_HIBYTE(DXL_LOWORD(position3));
-  uint16_t position4 = (uint16_t)msg->position4; // Convert int32 -> uint32
+  param_goal_position3[2] = DXL_LOBYTE(DXL_HIWORD(position3));
+  param_goal_position3[3] = DXL_HIBYTE(DXL_HIWORD(position3));
+  uint32_t position4 = (unsigned int)msg->position4; // Convert int32 -> uint32
   param_goal_position4[0] = DXL_LOBYTE(DXL_LOWORD(position4));
   param_goal_position4[1] = DXL_HIBYTE(DXL_LOWORD(position4));
+  param_goal_position4[2] = DXL_LOBYTE(DXL_HIWORD(position4));
+  param_goal_position4[3] = DXL_HIBYTE(DXL_HIWORD(position4));
 
   // Write Goal Position (length : 4 bytes)
   // When writing 2 byte data to AX / MX(1.0), use write2ByteTxRx() instead.
@@ -233,40 +241,32 @@ int main(int argc, char ** argv)
   }
 
   //set moving speed
-  dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL1_ID, ADDR_MOVING_SPEED, (uint16_t)100, &dxl_error);
+  dxl_comm_result = packetHandler->write1ByteTxRx(
+    portHandler, DXL1_ID, ADDR_MOVING_SPEED, 100, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS) {
     ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL1_ID);
     return -1;
-  } else{
-    ROS_INFO("success for setting moving speed for motor: %d",DXL1_ID);
   }
 
-  dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL2_ID, ADDR_MOVING_SPEED, (uint16_t)100, &dxl_error);
+  dxl_comm_result = packetHandler->write1ByteTxRx(
+    portHandler, DXL2_ID, ADDR_MOVING_SPEED, 100, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS) {
     ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL2_ID);
     return -1;
-  } else{
-    ROS_INFO("success for setting moving speed for motor: %d",DXL2_ID);
   }
 
-  dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL3_ID, ADDR_MOVING_SPEED, (uint16_t)100, &dxl_error);
+  dxl_comm_result = packetHandler->write1ByteTxRx(
+    portHandler, DXL3_ID, ADDR_MOVING_SPEED, 100, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS) {
     ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL3_ID);
     return -1;
-  } else{
-    ROS_INFO("success for setting moving speed for motor: %d",DXL3_ID);
   }
 
-  dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL4_ID, ADDR_MOVING_SPEED, (uint16_t)100, &dxl_error);
+  dxl_comm_result = packetHandler->write1ByteTxRx(
+    portHandler, DXL4_ID, ADDR_MOVING_SPEED, 100, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS) {
     ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL4_ID);
     return -1;
-  } else{
-    ROS_INFO("success for setting moving speed for motor: %d",DXL4_ID);
   }
 
 

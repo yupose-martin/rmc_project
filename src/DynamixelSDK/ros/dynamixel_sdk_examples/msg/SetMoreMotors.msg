@@ -2,7 +2,7 @@ uint8 id1
 uint8 id2
 uint8 id3
 uint8 id4
-int32 position1
-int32 position2
-int32 position3
-int32 position4
+int16 position1
+int16 position2
+int16 position3
+int16 position4
