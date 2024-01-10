@@ -12,7 +12,9 @@
 //basic length for arm
 #define l0 0.09
 #define l1 0.093
-#define l2 0.196 //0.093 + 0.105 //电磁铁0.072
+// #define l2 0.093 //0.093 + 0.105 //电磁铁0.072
+#define l2 0.196
+#define l3 0.072  //电磁铁的l3长度
 // #define closeGripper 120
 // #define openGripper 0
 //6 2 1 12 小大大小
@@ -21,16 +23,15 @@
 
 int color = 0;
 
+
 struct GoalPosition//arm末端所要到达的位置
 {
     double x;
     double y;
     double z;
 };
-
 //input x and y
-    GoalPosition goal;
-
+GoalPosition goal;
 struct ThetaArray
 {
     double theta0;//底部电机的角度
@@ -40,8 +41,7 @@ struct ThetaArray
 
 /**
  * @brief calculate joint angles
- * @param l0 第一个整数
- * @param b 第二个整数
+ * @param goalPosition goalPosition
  * 
  * @return int 返回两个整数的和
  */
@@ -65,20 +65,40 @@ ThetaArray getThetaArray(GoalPosition goalPosition)
 
     double theta3 = acos((pow(l1,2) + pow(l2,2) - (pow(down,2) + pow(up,2)) ) / (2 * l1 * l2));
     thetas.theta2 = M_PI - theta3;
-
+    ROS_INFO("theta0: %f theta1: %f theta2: %f",thetas.theta0,thetas.theta1,thetas.theta2);
     return thetas;
 }
 
 /**
- * @brief check the goalposition
- * @param goalposition end-effector positon of the arm
+ * @brief calculate joint angles
+ * @param goalPosition goalPosition
  * 
-*/
-bool checkGoalPosition(GoalPosition goalposition)//底边 min:0.21 max:0.25 高度：l0 + l1
+ * @return int 返回两个整数的和
+ */
+ThetaArray getThetaArrayForMoveDownGrasp(GoalPosition goalPosition)
 {
+    //初始化theta array
+    ThetaArray thetas;
+    thetas.theta0 = 0;
+    thetas.theta1 = 0;
+    thetas.theta2 = 0;
 
-    return false;
+    thetas.theta0 = atan2(goalPosition.y,goalPosition.x);
+
+    double down = sqrt(pow(goalPosition.y,2) + pow(goalPosition.x,2));
+    double up = goalPosition.z - l0;
+
+    double theta1 = atan2(up,down);
+    double theta2 = acos((pow(l1,2)  + (pow(down,2) + pow(up,2)) - pow(0.093/*l2*/,2)) 
+                    / (2 * l1 * sqrt((pow(down,2) + pow(up,2)))));
+    thetas.theta1 = 0.5*M_PI - theta1 - theta2;
+
+    double theta3 = acos((pow(l1,2) + pow(0.093/*l2*/,2) - (pow(down,2) + pow(up,2)) ) / (2 * l1 * l2));
+    thetas.theta2 = M_PI - theta3;
+    ROS_INFO("theta0: %f theta1: %f theta2: %f",thetas.theta0,thetas.theta1,thetas.theta2);
+    return thetas;
 }
+
 
 bool checkSmallMotor(int value)
 {
@@ -139,6 +159,32 @@ dynamixel_sdk_examples::SetMoreMotors transferMsg(GoalPosition goalPosition)
     msg.position1 = middle_position - (thetas.theta0 * position_per_theta);
     msg.position2 = middle_position + (thetas.theta1 * position_per_theta);
     msg.position3 = middle_position + (thetas.theta2 * position_per_theta);
+    // double theta3 = M_PI - thetas.theta1 - thetas.theta2;
+    // msg.position4 = middle_position + (theta3 * position_per_theta);
+
+    return msg;
+}
+
+/**
+ * @brief transfer goal position into position msg when moving down for grasping
+ * @param goalPosition xyz world coordinate
+ * @return return SetMoreMotors msg
+*/
+dynamixel_sdk_examples::SetMoreMotors transferMsgMoveDown(GoalPosition goalPosition)
+{
+    dynamixel_sdk_examples::SetMoreMotors msg;
+    msg.id1 = 6; 
+    msg.id2 = 2; 
+    msg.id3 = 1;
+    msg.id4 = 12;
+    msg.position4 = 512;
+    ThetaArray thetas = getThetaArrayForMoveDownGrasp(goalPosition);
+
+    msg.position1 = middle_position - (thetas.theta0 * position_per_theta);
+    msg.position2 = middle_position + (thetas.theta1 * position_per_theta);
+    msg.position3 = middle_position + (thetas.theta2 * position_per_theta);
+    double theta3 = M_PI - thetas.theta1 - thetas.theta2;
+    msg.position4 = middle_position + (theta3 * position_per_theta);
 
     return msg;
 }
@@ -208,8 +254,9 @@ int main(int argc, char **argv) {
 
     double theta1 = 0;
     double theta2 = 0;
-    
-    goal.x = 0.2;
+
+    //input goalpose
+    goal.x = 0.15;
     goal.y = 0;
     goal.z = 0;
 
@@ -229,35 +276,16 @@ int main(int argc, char **argv) {
         {
             ROS_INFO("initialState!");
             pub.publish(initial);
-            currentState = "readyToGrasp";
-            ros::Duration(3.0).sleep();
-        } else if (currentState == "readyToGrasp")//抓取中的预制位置
-        {
-            ROS_INFO("readyToGrasp!");
-            ROS_INFO("GOAL: x:%f y:%f z:%f ",moveUpPosition.x,moveUpPosition.y,moveUpPosition.z);
-            dynamixel_sdk_examples::SetMoreMotors msg = transferMsg(moveUpPosition);
-            ROS_INFO("msg: 1position: %d 2position: %d 3position: %d 4position: %d",
-                    msg.position1,msg.position2,msg.position3,msg.position4);
-            if (checkMotorPosition(msg))
-            {
-                pub.publish(msg);
-            } else if (!checkMotorPosition(msg))
-            {
-                currentState = "errorState";
-                ROS_INFO("wrong input: goal: x: %f y: %f z: %f\nnow error state\n",goal.x, goal.y, goal.z);
-            }
             currentState = "toGraspState";
             ros::Duration(3.0).sleep();
-        }
-        
-        else if (currentState == "toGraspState")//去抓取位置
+        } else if (currentState == "toGraspState")//去抓取位置
         {
-            std_msgs::UInt16 vel;
-            vel.data = 30;
-            pubVel.publish(vel);
+            goal.z = 0.19;
             ROS_INFO("toGraspState!");
             ROS_INFO("GOAL: x:%f y:%f z:%f ",goal.x,goal.y,goal.z);
-            dynamixel_sdk_examples::SetMoreMotors msg = transferMsg(goal);
+            dynamixel_sdk_examples::SetMoreMotors msg = transferMsgMoveDown(goal);
+            //dynamixel_sdk_examples::SetMoreMotors msg = transferMsg(goal);
+
             ROS_INFO("msg: 1position: %d 2position: %d 3position: %d 4position: %d",
                     msg.position1,msg.position2,msg.position3,msg.position4);
             if (checkMotorPosition(msg))
@@ -267,9 +295,45 @@ int main(int argc, char **argv) {
             {
                 currentState = "errorState";
                 ROS_INFO("wrong input: goal: x: %f y: %f z: %f\nnow error state\n",goal.x, goal.y, goal.z);
+                continue;
             }
-            currentState = "closeGripperState";
+            currentState = "moveDownState";
             ros::Duration(3.0).sleep();
+
+        } else if (currentState == "moveDownState")
+        {
+            ROS_INFO("grasping circulation!!!");
+            std_msgs::UInt16 speedMsg;
+            speedMsg.data = 60;
+            pubVel.publish(speedMsg);
+            while (goal.z>=l3)
+            {
+                goal.z -= 0.005;
+                dynamixel_sdk_examples::SetMoreMotors msg = transferMsgMoveDown(goal);
+                pub.publish(msg);
+                ros::Duration(0.1).sleep();
+            }
+            ros::Duration(3.0).sleep();
+            currentState = "closeGripperState";
+            // goal.z = l3;
+            // ROS_INFO("moveDownState!");
+            // ROS_INFO("GOAL: x:%f y:%f z:%f ",goal.x,goal.y,goal.z);
+            // dynamixel_sdk_examples::SetMoreMotors msg = transferMsgMoveDown(goal);
+            // ROS_INFO("msg: 1position: %d 2position: %d 3position: %d 4position: %d",
+            //         msg.position1,msg.position2,msg.position3,msg.position4);
+            // if (checkMotorPosition(msg))
+            // {
+            //     pub.publish(msg);
+            //     std_msgs::UInt16 speedMsg;
+            //     speedMsg.data = 20;
+            //     pubVel.publish(speedMsg);
+            // } else if (!checkMotorPosition(msg))
+            // {
+            //     currentState = "errorState";
+            //     ROS_INFO("wrong input: goal: x: %f y: %f z: %f\nnow error state\n",goal.x, goal.y, goal.z);
+            // }
+            // currentState = "closeGripperState";
+            // ros::Duration(3.0).sleep();
         } else if (currentState == "closeGripperState")//进行抓取
         {
             ROS_INFO("closeGripperState!");
@@ -278,9 +342,6 @@ int main(int argc, char **argv) {
             ros::Duration(3.0).sleep();
         } else if (currentState == "moveUpState")//移动到高处
         {
-            std_msgs::UInt16 vel;
-            vel.data = 60;
-            pubVel.publish(vel);
             ROS_INFO("moveUPState!");
             ROS_INFO("GOAL: x:%f y:%f z:%f ",moveUpPosition.x,moveUpPosition.y,moveUpPosition.z);
             dynamixel_sdk_examples::SetMoreMotors msg = transferMsg(moveUpPosition);
@@ -289,6 +350,9 @@ int main(int argc, char **argv) {
             if (checkMotorPosition(msg))
             {
                 pub.publish(msg);
+                std_msgs::UInt16 speedMsg;
+                speedMsg.data = 80;
+                pubVel.publish(speedMsg);
             } else if (!checkMotorPosition(msg))
             {
                 currentState = "errorState";

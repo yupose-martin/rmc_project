@@ -3,7 +3,11 @@
 ## ros启动流程
 
 * 文件：rmc_ws/src/DynamixelSDK/ros/dynamixel_sdk_examples/src
-* rosrun dynamixel_sdk_examples ...
+* rosrun rosserial_python serial_node.py _port:=/dev/ttyACM0 _baud:=57600(启动arduino)
+
+* rosrun dynamixel_sdk_examples more_motors_node (前置项)
+* rosrun dynamixel_Sdk_examples more_motors_publisher  (选择一，直接抓取)
+* rosun dynamixel_sdk_examples move_down_grasp (选择二，向下垂直抓取)
 
 ## AX-12A参数：
 
@@ -33,7 +37,8 @@ AX-12A参数：
 
 x * 196.07888989 = position change
 
-1. 稳定的电机:
+1. 使用的电机: 6  2  1  12
+1. 稳定的电机：
    * 8（1） 9 12 6 5 1 2
    * 较小范围: 6 9 12
    * 较大范围: 8(1) 1  2
@@ -60,4 +65,10 @@ x * 196.07888989 = position change
 
 ![image-20240104173857311](README.assets/image-20240104173857311.png)
 
-2
+
+
+## Todo
+
+* 三个颜色的抓取
+
+## 进度

@@ -16,6 +16,7 @@ find_package(catkin REQUIRED
     std_msgs
     message_generation
     dynamixel_sdk
+    geometry_msgs
 )
 
 ################################################################################
@@ -43,6 +44,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
     std_msgs
+    geometry_msgs
 )
 
 ################################################################################
@@ -53,6 +55,7 @@ catkin_package(
     roscpp
     std_msgs
     dynamixel_sdk
+    geometry_msgs
 #  DEPENDS system_lib
 )
 
@@ -92,6 +95,10 @@ target_link_libraries(sync_publisher_node ${catkin_LIBRARIES})
 add_executable(more_motors_publisher_node src/more_motors_publisher.cpp)
 add_dependencies(more_motors_publisher_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(more_motors_publisher_node ${catkin_LIBRARIES})
+
+add_executable(move_down_grasp_node src/move_down_grasp.cpp)
+add_dependencies(move_down_grasp_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(move_down_grasp_node ${catkin_LIBRARIES})
 
 ################################################################################
 # Install

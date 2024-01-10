@@ -37,6 +37,7 @@
 #include <ros/ros.h>
 
 #include "std_msgs/String.h"
+#include "std_msgs/UInt16.h"
 #include "dynamixel_sdk_examples/GetMoreMotors.h"
 #include "dynamixel_sdk_examples/SetMoreMotors.h"
 #include "dynamixel_sdk/dynamixel_sdk.h"
@@ -53,12 +54,12 @@ using namespace dynamixel;
 #define PROTOCOL_VERSION      1.0             // Default Protocol version of DYNAMIXEL X series.
 
 // Default setting
-#define DXL1_ID               2               // DXL1 ID
-#define DXL2_ID               6               // DXL2 ID
-#define DXL3_ID               12              // AX-12A ID
-#define DXL4_ID               1
+#define DXL1_ID               6               // DXL1 ID
+#define DXL2_ID               2               // DXL2 ID
+#define DXL3_ID               1              // AX-12A ID
+#define DXL4_ID               12
 #define BAUDRATE              1000000           // Default Baudrate of DYNAMIXEL AX-12A series
-#define DEVICE_NAME           "/dev/ttyUSB1"  // [Linux] To find assigned port, use "$ ls /dev/ttyUSB*" command
+#define DEVICE_NAME           "/dev/ttyUSB0"  // [Linux] To find assigned port, use "$ ls /dev/ttyUSB*" command
 
 PortHandler * portHandler = PortHandler::getPortHandler(DEVICE_NAME);
 PacketHandler * packetHandler = PacketHandler::getPacketHandler(PROTOCOL_VERSION);
@@ -189,6 +190,55 @@ void setMoreMotorsPositionCallback(const dynamixel_sdk_examples::SetMoreMotors::
   groupSyncWrite.clearParam();
 }
 
+void setMoreMotorsSpeedCallback(const std_msgs::UInt16::ConstPtr & msg)
+{
+  uint8_t dxl_error = 0;
+  int dxl_comm_result = COMM_TX_FAIL;
+
+  if (!portHandler->openPort()) {
+    ROS_ERROR("Failed to open the port!");
+    exit(0);
+  }
+  uint16_t speed = (uint16_t)msg->data;
+    //set moving speed
+  dxl_comm_result = packetHandler->write2ByteTxRx(
+    portHandler, DXL1_ID, ADDR_MOVING_SPEED, speed, &dxl_error);
+  if (dxl_comm_result != COMM_SUCCESS) {
+    ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL1_ID);
+    exit(0);
+  } else{
+    ROS_INFO("success for setting moving speed for motor: %d",DXL1_ID);
+  }
+
+  dxl_comm_result = packetHandler->write2ByteTxRx(
+    portHandler, DXL2_ID, ADDR_MOVING_SPEED, speed, &dxl_error);
+  if (dxl_comm_result != COMM_SUCCESS) {
+    ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL2_ID);
+    exit(0);
+  } else{
+    ROS_INFO("success for setting moving speed for motor: %d",DXL2_ID);
+  }
+
+  dxl_comm_result = packetHandler->write2ByteTxRx(
+    portHandler, DXL3_ID, ADDR_MOVING_SPEED, speed, &dxl_error);
+  if (dxl_comm_result != COMM_SUCCESS) {
+    ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL3_ID);
+    exit(0);
+  } else{
+    ROS_INFO("success for setting moving speed for motor: %d",DXL3_ID);
+  }
+
+  dxl_comm_result = packetHandler->write2ByteTxRx(
+    portHandler, DXL4_ID, ADDR_MOVING_SPEED, speed, &dxl_error);
+  if (dxl_comm_result != COMM_SUCCESS) {
+    ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL4_ID);
+    exit(0);
+  } else{
+    ROS_INFO("success for setting moving speed for motor: %d",DXL4_ID);
+  }
+  return;
+}
+
 int main(int argc, char ** argv)
 {
   uint8_t dxl_error = 0;
@@ -234,7 +284,7 @@ int main(int argc, char ** argv)
 
   //set moving speed
   dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL1_ID, ADDR_MOVING_SPEED, (uint16_t)100, &dxl_error);
+    portHandler, DXL1_ID, ADDR_MOVING_SPEED, (uint16_t)60, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS) {
     ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL1_ID);
     return -1;
@@ -243,7 +293,7 @@ int main(int argc, char ** argv)
   }
 
   dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL2_ID, ADDR_MOVING_SPEED, (uint16_t)100, &dxl_error);
+    portHandler, DXL2_ID, ADDR_MOVING_SPEED, (uint16_t)60, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS) {
     ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL2_ID);
     return -1;
@@ -252,7 +302,7 @@ int main(int argc, char ** argv)
   }
 
   dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL3_ID, ADDR_MOVING_SPEED, (uint16_t)100, &dxl_error);
+    portHandler, DXL3_ID, ADDR_MOVING_SPEED, (uint16_t)60, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS) {
     ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL3_ID);
     return -1;
@@ -261,7 +311,7 @@ int main(int argc, char ** argv)
   }
 
   dxl_comm_result = packetHandler->write2ByteTxRx(
-    portHandler, DXL4_ID, ADDR_MOVING_SPEED, (uint16_t)100, &dxl_error);
+    portHandler, DXL4_ID, ADDR_MOVING_SPEED, (uint16_t)60, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS) {
     ROS_ERROR("Failed to enable moving speed for Dynamixel ID %d", DXL4_ID);
     return -1;
@@ -275,6 +325,7 @@ int main(int argc, char ** argv)
   ros::NodeHandle nh;
   ros::ServiceServer sync_get_position_srv = nh.advertiseService("/get_more_motors", getMoreMotorsPositionCallback);
   ros::Subscriber sync_set_position_sub = nh.subscribe("/set_more_motors", 10, setMoreMotorsPositionCallback);
+  ros::Subscriber subMotorSpeed = nh.subscribe("/motorSpeed",10,setMoreMotorsSpeedCallback);
   ros::spin();
 
   portHandler->closePort();
