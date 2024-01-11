@@ -1,13 +1,27 @@
 # RMC_PROJECT
 
-## ros启动流程
+## ros机械臂启动流程
 
 * 文件：rmc_ws/src/DynamixelSDK/ros/dynamixel_sdk_examples/src
 * rosrun rosserial_python serial_node.py _port:=/dev/ttyACM0 _baud:=57600(启动arduino)
-
 * rosrun dynamixel_sdk_examples more_motors_node (前置项)
 * rosrun dynamixel_Sdk_examples more_motors_publisher  (选择一，直接抓取)
 * rosun dynamixel_sdk_examples move_down_grasp (选择二，向下垂直抓取)
+
+## camera启动
+
+1.roslaunch astra_camera astra_pro.launch开摄像头
+
+2.rqt_image_view 开图像查看器
+
+3.rosrun astra_camera colortest开主程序
+
+4.rostopic echo /square_detection监听消息（pointstamp）
+rostopic echo test（string简化版）
+
+rqt topic选/color_detection_result查看处理后图像，/camera/color/image_raw查看原图，/adjusted_image查看掩码处理后图像
+
+最后一点，我新加的文件在src下叫colortest，如果要改代码要重新catkinmake一下
 
 ## AX-12A参数：
 
