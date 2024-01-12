@@ -10,9 +10,9 @@
 #define position_per_theta 196.07888989
 #define initialPosition 512
 //basic length for arm
-#define l0 0.09
+#define l0 0.095
 #define l1 0.093
-#define l2 0.196 //0.093 + 0.105 //电磁铁0.072
+#define l2 0.233 //0.093 + 夹爪0.14 //电磁铁0.072
 // #define closeGripper 120
 // #define openGripper 0
 //6 2 1 12 小大大小
@@ -136,7 +136,7 @@ dynamixel_sdk_examples::SetMoreMotors transferMsg(GoalPosition goalPosition)
     msg.position4 = 512;
     ThetaArray thetas = getThetaArray(goalPosition);
 
-    msg.position1 = middle_position - (thetas.theta0 * position_per_theta);
+    msg.position1 = middle_position + (thetas.theta0 * position_per_theta);
     msg.position2 = middle_position + (thetas.theta1 * position_per_theta);
     msg.position3 = middle_position + (thetas.theta2 * position_per_theta);
 
@@ -147,13 +147,13 @@ dynamixel_sdk_examples::SetMoreMotors transferMsg(GoalPosition goalPosition)
 void poseStampedCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
 {
     ROS_INFO("poseStampedCallback");
-    if (msg->header.frame_id == "red")
+    if (msg->header.frame_id == "Red")
     {
         color = 0;
-    } else if (msg->header.frame_id == "green")
+    } else if (msg->header.frame_id == "Green")
     {
         color = 1;
-    } else if (msg->header.frame_id == "blue")
+    } else if (msg->header.frame_id == "Blue")
     {
         color = 2;
     }
@@ -166,7 +166,7 @@ void poseStampedCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
 
 int main(int argc, char **argv) {
     std_msgs::UInt16 closeGripper;
-    closeGripper.data = 150;
+    closeGripper.data = 180;
 
     std_msgs::UInt16 openGripper;
     openGripper.data = 0;
@@ -175,17 +175,17 @@ int main(int argc, char **argv) {
     GoalPosition color1Position;
     color1Position.x = 0;
     color1Position.y = 0.2;
-    color1Position.z = 0.05;
+    color1Position.z = 0.1;
 
     GoalPosition color2Position;
     color2Position.x = 0.1;
     color2Position.y = 0.2;
-    color2Position.z = 0.05;
+    color2Position.z = 0.1;
 
     GoalPosition color0Position;
-    color0Position.x = -0.1;
-    color0Position.y = 0.2;
-    color0Position.z = 0.05;
+    color0Position.x = 0.25;
+    color0Position.y = -0.2;
+    color0Position.z = 0.1;
 
     GoalPosition moveUpPosition;
     moveUpPosition.x = 0.2;
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
     // Create a publisher object
     ros::Publisher pub = nh.advertise<dynamixel_sdk_examples::SetMoreMotors>("/set_more_motors", 10);
     ros::Publisher pubServo = nh.advertise<std_msgs::UInt16>("/servo",10);
-    ros::Subscriber subPose = nh.subscribe<geometry_msgs::PointStamped>("/poseStamped",10,poseStampedCallback);
+    ros::Subscriber subPose = nh.subscribe<geometry_msgs::PointStamped>("/square_detection",10,poseStampedCallback);
     ros::Publisher pubVel = nh.advertise<std_msgs::UInt16>("/motorSpeed",10);
     // Set the loop rate
     ros::Rate loop_rate(10);
@@ -211,7 +211,7 @@ int main(int argc, char **argv) {
     
     goal.x = 0.2;
     goal.y = 0;
-    goal.z = 0;
+    goal.z = 0.01;
 
     dynamixel_sdk_examples::SetMoreMotors initial;
     initial.id1 = 6;
@@ -227,12 +227,15 @@ int main(int argc, char **argv) {
     {
         if (currentState == "initialState")//设置初始位置
         {
+            pubServo.publish(openGripper);
             ROS_INFO("initialState!");
             pub.publish(initial);
             currentState = "readyToGrasp";
             ros::Duration(3.0).sleep();
         } else if (currentState == "readyToGrasp")//抓取中的预制位置
         {
+            moveUpPosition.x = goal.x;
+            moveUpPosition.y = goal.y;
             ROS_INFO("readyToGrasp!");
             ROS_INFO("GOAL: x:%f y:%f z:%f ",moveUpPosition.x,moveUpPosition.y,moveUpPosition.z);
             dynamixel_sdk_examples::SetMoreMotors msg = transferMsg(moveUpPosition);
@@ -299,7 +302,7 @@ int main(int argc, char **argv) {
         } else if (currentState == "placeState")//放置位置
         {
             ROS_INFO("placeState!");
-            if(color == 0)//颜色0
+            if(color == 0)//颜色0 RED
             {
                 //set goal position for color 0
                 ROS_INFO("GOAL: x:%f y:%f z:%f ",color0Position.x,color0Position.y,color0Position.z);
@@ -307,7 +310,7 @@ int main(int argc, char **argv) {
                 ROS_INFO("msg: 1position: %d 2position: %d 3position: %d 4position: %d",
                         msg.position1,msg.position2,msg.position3,msg.position4);
                 pub.publish(msg);
-            } else if (color == 1)//颜色1
+            } else if (color == 1)//颜色1  GREEN
             {
                 //set goal position for color 1
                 ROS_INFO("GOAL: x:%f y:%f z:%f ",color1Position.x,color1Position.y,color1Position.z);
@@ -315,7 +318,7 @@ int main(int argc, char **argv) {
                 ROS_INFO("msg: 1position: %d 2position: %d 3position: %d 4position: %d",
                         msg.position1,msg.position2,msg.position3,msg.position4);
                 pub.publish(msg);
-            } else if (color == 2)//颜色2
+            } else if (color == 2)//颜色2  BLUE
             {
                 //set goal position for color 2
                 ROS_INFO("GOAL: x:%f y:%f z:%f ",color2Position.x,color2Position.y,color2Position.z);

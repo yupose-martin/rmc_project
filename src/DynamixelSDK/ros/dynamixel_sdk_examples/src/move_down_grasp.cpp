@@ -15,6 +15,7 @@
 // #define l2 0.093 //0.093 + 0.105 //电磁铁0.072
 #define l2 0.196
 #define l3 0.072  //电磁铁的l3长度
+#define l4 0.04 //铝型材的长度
 // #define closeGripper 120
 // #define openGripper 0
 //6 2 1 12 小大大小
@@ -156,7 +157,7 @@ dynamixel_sdk_examples::SetMoreMotors transferMsg(GoalPosition goalPosition)
     msg.position4 = 512;
     ThetaArray thetas = getThetaArray(goalPosition);
 
-    msg.position1 = middle_position - (thetas.theta0 * position_per_theta);
+    msg.position1 = middle_position + (thetas.theta0 * position_per_theta);
     msg.position2 = middle_position + (thetas.theta1 * position_per_theta);
     msg.position3 = middle_position + (thetas.theta2 * position_per_theta);
     // double theta3 = M_PI - thetas.theta1 - thetas.theta2;
@@ -180,7 +181,7 @@ dynamixel_sdk_examples::SetMoreMotors transferMsgMoveDown(GoalPosition goalPosit
     msg.position4 = 512;
     ThetaArray thetas = getThetaArrayForMoveDownGrasp(goalPosition);
 
-    msg.position1 = middle_position - (thetas.theta0 * position_per_theta);
+    msg.position1 = middle_position + (thetas.theta0 * position_per_theta);
     msg.position2 = middle_position + (thetas.theta1 * position_per_theta);
     msg.position3 = middle_position + (thetas.theta2 * position_per_theta);
     double theta3 = M_PI - thetas.theta1 - thetas.theta2;
@@ -193,13 +194,13 @@ dynamixel_sdk_examples::SetMoreMotors transferMsgMoveDown(GoalPosition goalPosit
 void poseStampedCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
 {
     ROS_INFO("poseStampedCallback");
-    if (msg->header.frame_id == "red")
+    if (msg->header.frame_id == "Red")
     {
         color = 0;
-    } else if (msg->header.frame_id == "green")
+    } else if (msg->header.frame_id == "Green")
     {
         color = 1;
-    } else if (msg->header.frame_id == "blue")
+    } else if (msg->header.frame_id == "Blue")
     {
         color = 2;
     }
@@ -247,7 +248,7 @@ int main(int argc, char **argv) {
     // Create a publisher object
     ros::Publisher pub = nh.advertise<dynamixel_sdk_examples::SetMoreMotors>("/set_more_motors", 10);
     ros::Publisher pubServo = nh.advertise<std_msgs::UInt16>("/servo",10);
-    ros::Subscriber subPose = nh.subscribe<geometry_msgs::PointStamped>("/poseStamped",10,poseStampedCallback);
+    ros::Subscriber subPose = nh.subscribe<geometry_msgs::PointStamped>("/square_detection",10,poseStampedCallback);
     ros::Publisher pubVel = nh.advertise<std_msgs::UInt16>("/motorSpeed",10);
     // Set the loop rate
     ros::Rate loop_rate(10);
@@ -306,8 +307,9 @@ int main(int argc, char **argv) {
             std_msgs::UInt16 speedMsg;
             speedMsg.data = 60;
             pubVel.publish(speedMsg);
-            while (goal.z>=l3)
+            while (goal.z>=(l3 + 0.02 - 0.003 ))
             {
+                ROS_INFO("goal.z is: %f",goal.z);
                 goal.z -= 0.005;
                 dynamixel_sdk_examples::SetMoreMotors msg = transferMsgMoveDown(goal);
                 pub.publish(msg);

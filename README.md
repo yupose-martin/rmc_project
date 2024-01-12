@@ -84,5 +84,8 @@ x * 196.07888989 = position change
 ## Todo
 
 * 三个颜色的抓取
+* camera连不上
 
 ## 进度
+
+* 调整了move_down_grasp抓取的goal.z。
