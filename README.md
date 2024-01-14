@@ -7,6 +7,10 @@
   Your browser does not support the video tag.
 </video>
 
+https://github.com/yupose-martin/rmc_project/assets/114896246/56ec8f8a-1966-4bbf-9b04-a421e8012af1
+
+
+
 ## ros机械臂启动流程
 
 * 文件：rmc_ws/src/DynamixelSDK/ros/dynamixel_sdk_examples/src
