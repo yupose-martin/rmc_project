@@ -1,5 +1,12 @@
 # RMC_PROJECT
 
+## 视频展示
+
+<video>
+  <source src="README.assets/grasp.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 ## ros机械臂启动流程
 
 * 文件：rmc_ws/src/DynamixelSDK/ros/dynamixel_sdk_examples/src
