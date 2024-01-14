@@ -66,26 +66,12 @@ x * 196.07888989 = position change
 
 ![image-20240103170043179](README.assets/image-20240103170043179.png)
 
-
-
-* 抓取姿态：2：512       6：700     12：717
-* 转移姿态：
-
-
-
 ### address of AX-12A
 
 ![image-20240104173845224](README.assets/image-20240104173845224.png)
 
 ![image-20240104173857311](README.assets/image-20240104173857311.png)
 
+## 错误反思
 
-
-## Todo
-
-* 三个颜色的抓取
-* camera连不上
-
-## 进度
-
-* 调整了move_down_grasp抓取的goal.z。
+* 经常出现在catkin_Ws里面也有包，然后在另外一个包里也有这个包，执行的时候，发现修改代码编译执行之后效果不变。

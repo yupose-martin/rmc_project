@@ -5,7 +5,6 @@
 #include <string>
 #include <std_msgs/UInt16.h>
 #include <geometry_msgs/PointStamped.h>
-
 //arm theta formula; position change = position_per_theta * theta
 #define position_per_theta 196.07888989
 #define initialPosition 512
@@ -19,12 +18,8 @@
 // #define closeGripper 120
 // #define openGripper 0
 //6 2 1 12 小大大小
-
 #define middle_position 512
-
 int color = 0;
-
-
 struct GoalPosition//arm末端所要到达的位置
 {
     double x;
@@ -39,7 +34,6 @@ struct ThetaArray
     double theta1;//第一个旋转电机的角度
     double theta2;//第二个旋转电机的角度
 };
-
 /**
  * @brief calculate joint angles
  * @param goalPosition goalPosition
@@ -69,7 +63,6 @@ ThetaArray getThetaArray(GoalPosition goalPosition)
     ROS_INFO("theta0: %f theta1: %f theta2: %f",thetas.theta0,thetas.theta1,thetas.theta2);
     return thetas;
 }
-
 /**
  * @brief calculate joint angles
  * @param goalPosition goalPosition
@@ -99,8 +92,6 @@ ThetaArray getThetaArrayForMoveDownGrasp(GoalPosition goalPosition)
     ROS_INFO("theta0: %f theta1: %f theta2: %f",thetas.theta0,thetas.theta1,thetas.theta2);
     return thetas;
 }
-
-
 bool checkSmallMotor(int value)
 {
     if((value <= 204) || (value >= 820))
@@ -109,7 +100,6 @@ bool checkSmallMotor(int value)
     }
     return true;
 }
-
 bool checkLargeMotor(int value)
 {
     if((value <= 0) || (value >= 1024))
@@ -118,7 +108,6 @@ bool checkLargeMotor(int value)
     }
     return true;
 }
-
 /**
  * @brief check the motor position
  * @param goalposition end-effector positon of the arm
@@ -141,7 +130,6 @@ bool checkMotorPosition(dynamixel_sdk_examples::SetMoreMotors msg)//底边 min:0
     }
     return true;
 }
-
 /**
  * @brief transfer goal position into position msg
  * @param goalPosition xyz world coordinate
@@ -165,7 +153,6 @@ dynamixel_sdk_examples::SetMoreMotors transferMsg(GoalPosition goalPosition)
 
     return msg;
 }
-
 /**
  * @brief transfer goal position into position msg when moving down for grasping
  * @param goalPosition xyz world coordinate
@@ -189,7 +176,6 @@ dynamixel_sdk_examples::SetMoreMotors transferMsgMoveDown(GoalPosition goalPosit
 
     return msg;
 }
-
 // 回调函数
 void poseStampedCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
 {
@@ -209,8 +195,6 @@ void poseStampedCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
     goal.y = msg->point.y;
     goal.z = 0;
 }
-
-
 int main(int argc, char **argv) {
     std_msgs::UInt16 closeGripper;
     closeGripper.data = 150;
@@ -271,6 +255,7 @@ int main(int argc, char **argv) {
     //先初始位置
         pub.publish(initial);
         ros::Duration(3.0).sleep();
+    
     while (ros::ok())
     {
         if (currentState == "initialState")//设置初始位置
@@ -301,7 +286,7 @@ int main(int argc, char **argv) {
             currentState = "moveDownState";
             ros::Duration(3.0).sleep();
 
-        } else if (currentState == "moveDownState")
+        } else if (currentState == "moveDownState")//移动到抓取位置
         {
             ROS_INFO("grasping circulation!!!");
             std_msgs::UInt16 speedMsg;

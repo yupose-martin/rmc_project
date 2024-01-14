@@ -69,17 +69,6 @@ ThetaArray getThetaArray(GoalPosition goalPosition)
     return thetas;
 }
 
-/**
- * @brief check the goalposition
- * @param goalposition end-effector positon of the arm
- * 
-*/
-bool checkGoalPosition(GoalPosition goalposition)//底边 min:0.21 max:0.25 高度：l0 + l1
-{
-
-    return false;
-}
-
 bool checkSmallMotor(int value)
 {
     if((value <= 204) || (value >= 820))
@@ -147,6 +136,7 @@ dynamixel_sdk_examples::SetMoreMotors transferMsg(GoalPosition goalPosition)
 void poseStampedCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
 {
     ROS_INFO("poseStampedCallback");
+    ROS_INFO("msg: color: %s,  x: %f  y: %f",msg->header.frame_id.c_str(),msg->point.x,msg->point.y);
     if (msg->header.frame_id == "Red")
     {
         color = 0;
@@ -230,13 +220,13 @@ int main(int argc, char **argv) {
             pubServo.publish(openGripper);
             ROS_INFO("initialState!");
             pub.publish(initial);
-            currentState = "readyToGrasp";
+            currentState = "readyToGraspState";
             ros::Duration(3.0).sleep();
-        } else if (currentState == "readyToGrasp")//抓取中的预制位置
+        } else if (currentState == "readyToGraspState")//抓取中的预制位置
         {
             moveUpPosition.x = goal.x;
             moveUpPosition.y = goal.y;
-            ROS_INFO("readyToGrasp!");
+            ROS_INFO("readyToGraspState!");
             ROS_INFO("GOAL: x:%f y:%f z:%f ",moveUpPosition.x,moveUpPosition.y,moveUpPosition.z);
             dynamixel_sdk_examples::SetMoreMotors msg = transferMsg(moveUpPosition);
             ROS_INFO("msg: 1position: %d 2position: %d 3position: %d 4position: %d",
