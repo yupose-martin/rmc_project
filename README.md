@@ -32,12 +32,24 @@ rostopic echo test（string简化版）
 
 5.rqt topic选/color_detection_result查看处理后图像，/camera/color/image_raw查看原图，/adjusted_image查看掩码处理后图像
 
-6.最后一点，我新加的文件在src下叫colortest，如果要改代码要重新catkinmake一下
-
 ## 参考库
 
-* https://github.com/ROBOTIS-GIT/DynamixelSDK
-* https://github.com/orbbec/ros_astra_camera
+* https://github.com/ROBOTIS-GIT/DynamixelSDK 舵机驱动
+* https://github.com/orbbec/ros_astra_camera 相机驱动
+
+## 主要程序
+
+* ./src/DynamixelSDK/ros/dynamixel_sdk_examples/src/more_motors.cpp(控制舵机)
+* ./src/DynamixelSDK/ros/dynamixel_sdk_examples/src/more_motors_publish.cpp（直接抓取主程序）
+* ./src/DynamixelSDK/ros/dynamixel_sdk_examples/src/move_down_grasp.cpp（向下抓取主程序）
+* ./arduino_node/ServoControl.pde(arduino_ros，控制夹爪)
+* ./src/ros_astra_camera/src/colortest.cpp(颜色识别)
+
+## rqt_graph
+
+![image-20240121192025480](README.assets/image-20240121192025480.png)
+
+![image-20240121192041066](README.assets/image-20240121192041066.png)
 
 ## AX-12A参数：
 
