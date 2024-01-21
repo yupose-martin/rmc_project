@@ -26,9 +26,14 @@
 4.rostopic echo /square_detection监听消息（pointstamp）
 rostopic echo test（string简化版）
 
-rqt topic选/color_detection_result查看处理后图像，/camera/color/image_raw查看原图，/adjusted_image查看掩码处理后图像
+5.rqt topic选/color_detection_result查看处理后图像，/camera/color/image_raw查看原图，/adjusted_image查看掩码处理后图像
 
-最后一点，我新加的文件在src下叫colortest，如果要改代码要重新catkinmake一下
+6.最后一点，我新加的文件在src下叫colortest，如果要改代码要重新catkinmake一下
+
+## 参考库
+
+* https://github.com/ROBOTIS-GIT/DynamixelSDK
+* https://github.com/orbbec/ros_astra_camera
 
 ## AX-12A参数：
 
